@@ -9,8 +9,6 @@
 [ -z $IS_CI ] && IS_CI=false
 [ -z $DO_CLEAN ] && DO_CLEAN=false
 [ -z $LTO ] && LTO=none
-[ -z $DEFAULT_KSU_REPO ] && DEFAULT_KSU_REPO="https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh"
-[ -z $SUSFS_KSU_REPO ] && SUSFS_KSU_REPO="https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh"
 [ -z $DEVICE ] && DEVICE="Unknown"
 
 # special rissu's path. linked to his toolchains
@@ -33,9 +31,7 @@ export CLANG_TRIPLE=aarch64-linux-gnu-
 export DTC_EXT=$(pwd)/tools/dtc
 export PROJECT_NAME="Wonderful-${PROJECT_VERSION}-${DEVICE}"
 export CLANG_VERSION_TEXT=$(clang --version | head -n 1)
-if [ "$SUSFS4KSU" = "true" ]; then
-    export LOCALVERSION="-wonderful-${PROJECT_VERSION}-SuSFS-qgki+"
-elif [ "$KERNELSU" = "true" ]; then
+if [ "$KERNELSU" = "true" ]; then
     export LOCALVERSION="-wonderful-${PROJECT_VERSION}-Next-qgki+"
 else
     export LOCALVERSION="-wonderful-${PROJECT_VERSION}-Vanilla-gki+"
@@ -148,11 +144,6 @@ else
 fi
 
 
-if [ "$SUSFS4KSU" = "true" ]; then
-	curl -LSs $DEFAULT_KSU_REPO | bash -s legacy_susfs
-else
-    [ "$KERNELSU" = "true" ] && curl -LSs $DEFAULT_KSU_REPO | bash -s legacy || pr_info "KernelSU Next is disabled. Add 'KERNELSU=true' or 'export KERNELSU=true' to enable"
-fi
 
 BUILD_TARGET="$1"
 FIRST_JOB="$2"
@@ -257,9 +248,7 @@ post_build() {
 	
 	AK3="$(pwd)/AnyKernel3"
 	DATE=$(date +'%Y%m%d%H%M%S')
-	if [ "$SUSFS4KSU" = "true" ]; then
-		MOD="-SuSFS"
-	elif [ "$KERNELSU" = "true" ]; then
+	if [ "$KERNELSU" = "true" ]; then
 		MOD="-Next"
 	else
 		MOD="-Vanilla"
@@ -336,25 +325,8 @@ if [ "$BUILD" = "kernel" ]; then
     # Initial defconfig build
     make -j`echo $ALLOC_JOB` -C $(pwd) O=$(pwd)/out `echo $DEFAULT_ARGS` `echo $BUILD_DEFCONFIG`
     
-    # Apply SuSFS-specific configurations before final build
-    if [ "$SUSFS4KSU" = "true" ]; then
-        echo "SuSFS enabled"
-        setconfig enable KSU
-		setconfig enable KSU_SUSFS
-		setconfig enable KSU_SUSFS_SUS_PATH
-		setconfig enable KSU_SUSFS_SUS_MOUNT
-		setconfig enable KSU_SUSFS_SUS_KSTAT
-		setconfig enable KSU_SUSFS_SPOOF_UNAME
-		setconfig enable KSU_SUSFS_ENABLE_LOG
-		setconfig enable KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
-		setconfig enable KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
-		setconfig enable KSU_SUSFS_OPEN_REDIRECT
-		setconfig enable KSU_SUSFS_SUS_MAP
-		setconfig enable THREAD_INFO_IN_TASK
-		setconfig enable KSU_TAMPER_SYSCALL_TABLE
-    else
-        [ "$KERNELSU" = "true" ] && echo "KernelSU Enabled" && setconfig enable KSU
-    fi
+    # Apply KernelSU configuration
+    [ "$KERNELSU" = "true" ] && echo "KernelSU Enabled" && setconfig enable KSU
 
     # Apply LTO configuration if enabled
     [ "$LTO" != "none" ] && handle_lto || pr_info "LTO not set"

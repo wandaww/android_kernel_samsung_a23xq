@@ -15,7 +15,6 @@ export PROJECT_VERSION="0.8"
 export LLVM=1
 export LLVM_IAS=1
 export KERNELSU=true
-export SUSFS4KSU=true
         
 bash $(pwd)/build.sh kernel --jobs $(nproc --all) `echo $DEFCONFIG`
         

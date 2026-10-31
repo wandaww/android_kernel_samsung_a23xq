@@ -7,16 +7,12 @@ out/
 # AnyKernel3
 AnyKernel3*
 
-# KernelSU Next
-KernelSU-Next*
 driver/kernelsu 
 
 utsrelease.c
 getutsrel
 drivers/kernelsu
 
-# SuSFS
 *.rej
 *.orig
 *.patch
-susfs4ksu*
